@@ -11,7 +11,7 @@ import messageRoutes from "./routes/message.route.js";
 dotenv.config()
 const app= express(); // creating an express app
 
-const PORT= process.env.PORT // process.env to read .env content (now the port value is coming form .env file)
+const PORT=process.env.PORT // process.env to read .env content (now the port value is coming form .env file)
 
 app.use(express.json()); //basically allows us to extract the json data from body @auth.controller.js
 app.use(cookieParser()); //allows us to parse a cookie
