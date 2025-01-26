@@ -14,7 +14,7 @@ import { useAuthStore } from '../store/useAuthStore.js'
 const HomePage = () => {
 
     const [mediaStream, setMediaStream] = useState(null)
-    const [capturedImage, setCapturedImage] = useState(null);
+    const [streamStarted, setStreamStarted] = useState(false)
     const [ws, setWs] = useState(null);
     
     const [searchParams, setSearchParams] = useSearchParams();
@@ -106,7 +106,7 @@ const HomePage = () => {
                 <button className='btn btn-ghost p-2' onClick={() => { if (mediaStream) { stopWebcam() } else { startCam() } }}>
                     {mediaStream ? 'Cancel' : <CameraIcon className='h-5 w-5 text-base-content/40'></CameraIcon>}
                 </button>
-                <button className='btn btn-primary' onClick={startStream}>Start</button>
+                <button className='btn btn-primary' onClick={startStream}>{streamStarted ? 'Stop' : 'Start'}</button>
                 
             <video ref={videoRef} autoPlay className='rounded'></video>
             </div>
