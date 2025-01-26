@@ -16,7 +16,7 @@ app.use(cors({
     origin: ['http://localhost:5173'],
 }))
 
-app.use(cookieParser())
+// app.use(cookieParser())
 
 
 function protect_path(req, res, next) {
@@ -42,7 +42,7 @@ function protect_path(req, res, next) {
 
 app.use('/',  express.static(path.join(import.meta.dirname, 'dist copy')))
 
-app.use('hls', express.static(path.join(import.meta.dirname, 'hls')))
+app.use('/hls', express.static(path.join(import.meta.dirname, 'hls')))
 
 
 const server = app.listen(HLS_PORT, () => {

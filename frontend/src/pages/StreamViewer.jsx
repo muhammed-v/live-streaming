@@ -45,10 +45,6 @@ export default function StreamViewer() {
                     maxLoadingDelay:maxLoadingDelay,
                     minAutoBitrate:minAutoBitrate,
                     lowLatencyMode: lowLatencyMode,
-                    xhrSetup: (xhr, url) => {
-                        // Enable sending cookies with requests
-                        xhr.withCredentials = true;
-                      },
                 }}
             /> : ''}
         </div>
