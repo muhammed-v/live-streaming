@@ -1,33 +1,108 @@
 import fs from 'fs'
 import path from 'path';
 import { spawn } from 'child_process';
-import { WebSocketServer } from 'ws'
+import { WebSocketServer } from 'ws';
+import express from 'express'
+import cors from 'cors'
+import jwt from 'jsonwebtoken'
+import { parse, URL, format } from 'url'
+import cookieParser from 'cookie-parser';
+
+const HLS_PORT = 3200
+
+const app = express()
+
+app.use(cors({
+    origin: ['http://localhost:5173'],
+}))
+
+app.use(cookieParser())
+
+
+function protect_path(req, res, next) {
+    try {
+        const token= req.cookies.jwt; // jwt is used since we named our token as jwt while creating ... To grab token from cookies, we use cookie parser package
+
+        if(!token){//if no token provided
+            return res.status(401).json({message: "Unauthorized - No Token Provided"});
+        }
+        const decoded= jwt.verify(token,'mysecretkey') // we used private key JWT_SECRET to create the token, therefore for decoding also, we use the same key.
+
+        if (!decoded){ // if decoded value is false
+            return res.status(401).json({message: "Unauthorized - Invalid Token", data: req.cookies});
+        }
+
+          next()
+
+    } catch (error) {
+        console.log("Error in protectRoute middleware: ",error.message);
+        res.status(500).json({message:"Internal Server Error gau"});
+    }
+}
+
+app.use('/',  express.static(path.join(import.meta.dirname, 'dist copy')))
+
+app.use('hls', express.static(path.join(import.meta.dirname, 'hls')))
+
+
+const server = app.listen(HLS_PORT, () => {
+    console.log(import.meta.dirname)
+    console.log('HLS Server start')
+})
+
+function authenticate(request) {
+    const { token } = parse(request.url, true).query  //request.cookies.jwt??
+    // TODO: Actually authenticate token
+    console.log('Authenticating...')
+    const decoded = jwt.verify(token, 'mysecretkey')
+    console.log(decoded)
+    if (decoded) {
+        return {
+            auth: true,
+            userId: decoded.userId
+        }
+    }
+}
+
+const wss = new WebSocketServer({noServer: true});
+
+server.on('upgrade', (request, socket, head) => {
+    console.log('here')
+    const {auth, userId} = authenticate(request)
+
+    if (!auth) {
+        // \r\n\r\n: These are control characters used in HTTP to
+        // denote the end of the HTTP headers section.
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+        socket.destroy()
+        return 
+    }
+
+    request.authData = userId;
+
+    wss.handleUpgrade(request, socket, head, connection => {
+        // Manually emit the 'connection' event on a WebSocket 
+        // server (we subscribe to this event below).
+        wss.emit('connection', connection, request)
+    })
+})
 
 
 // Set up WebSocket server
-const wss = new WebSocketServer({ port: 3200 });
-console.log('WebSocket server running on ws://localhost:3200');
 
-const directory = "hls";
 
-fs.readdir(directory, (err, files) => {
-  if (err) throw err;
-
-  for (const file of files) {
-    fs.unlink(path.join(directory, file), (err) => {
-      if (err) throw err;
-    });
-  }
-});
 
 // Create HLS output directory
-const hlsDir = path.join(import.meta.dirname, 'hls');
-if (!fs.existsSync(hlsDir)) fs.mkdirSync(hlsDir);
 
-let ffmpeg;
 
-// Handle WebSocket connections
-wss.on('connection', (ws) => {
+function handleNewStreamConnection(ws, req) {
+    // console.log(req)
+    const userId = req.authData
+    console.log(userId)
+
+    const hlsDir = path.join(import.meta.dirname, `hls/hls_${userId}`);
+    if (!fs.existsSync(hlsDir)) fs.mkdirSync(hlsDir);
+    let ffmpeg;
     console.log('Client connected');
 
 
@@ -69,9 +144,24 @@ wss.on('connection', (ws) => {
         if (ffmpeg.stdin.writable) {
             ffmpeg.stdin.end();
         }
+        fs.readdir(hlsDir, (err, files) => {
+            if (err) throw err;
+          
+            for (const file of files) {
+              fs.unlink(path.join(hlsDir, file), (err) => {
+                if (err) throw err;
+              });
+            }
+          });
     });
 
     ws.on('error', (err) => {
         console.error('WebSocket error:', err);
     });
+}
+
+
+// Handle WebSocket connections
+wss.on('connection', (ws, req) => {
+    handleNewStreamConnection(ws, req);
 });

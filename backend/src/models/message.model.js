@@ -2,28 +2,24 @@
 
 import mongoose from "mongoose";
 
-const messageSchema = new mongoose.Schema(
+const streamSchema = new mongoose.Schema(
     {
-        senderId:{
+        viewerId:{
             type: mongoose.Schema.Types.ObjectId,
             ref:"User", // senderId will be a reference to the user model(since sender is a user)
             required:true
         },
-        receiverId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            required:true
-        },
-        text:{
+        // streamId:{   ///// use _id instead
+        //     type:mongoose.Schema.Types.ObjectId,
+        //     required:true
+        // },
+        streamName:{
             type:String
-        },
-        image: {
-            type: String
         }
     },
     {timestamps: true}
 );
 
-const Message = mongoose.model("Message",messageSchema); 
+const Stream = mongoose.model("Stream",streamSchema); 
 
-export default Message;// we're exporting it so we can use it in different files in our application
+export default Stream;// we're exporting it so we can use it in different files in our application

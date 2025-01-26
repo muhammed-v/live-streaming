@@ -7,7 +7,7 @@ export const generateToken = (userId,res) =>{
     process.env.JWT_SECRET,{expiresIn:"7d"}); //{} ->object
     res.cookie("jwt",token,{
         maxAge: 7 *24 *60 *60 *1000, // 7 days in millisec
-        httpOnly:true, // prevent XSS attacks->cross-site scripting attacks(cannot be accessed by js)
+        httpOnly:false, // prevent XSS attacks->cross-site scripting attacks(cannot be accessed by js)
         sameSite: "strict",// CSRF attacks -> cross-site request forgery attacks
         secure: process.env.NODE_ENV !== "development" //https if in production. else http(returns false if in development)
     });

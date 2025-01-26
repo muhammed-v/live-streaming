@@ -6,7 +6,7 @@ import cors from 'cors'; // cors error due to backend and front end being differ
 
 import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js"; //for local files put .js in the end since type is module
-import messageRoutes from "./routes/message.route.js"; 
+import streamRoutes from "./routes/stream.route.js"
 
 dotenv.config()
 const app= express(); // creating an express app
@@ -21,7 +21,8 @@ app.use(cors({ //use curly braces, this shit is an object
 }));
 
 app.use("/api/auth",authRoutes); //if user visits /api/auth, then call authRoutes
-app.use("/api/message",messageRoutes);
+// app.use("/streams", )
+
 
 app.listen(PORT,()=>{ //once starts listening, display the string server is runnin on PORT. to run this, create a script in scripts of package.json
     console.log(" server is runnin on PORT: "+ PORT);
